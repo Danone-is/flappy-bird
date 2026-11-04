@@ -13,15 +13,18 @@
     <h3>Pontos: <span id="pontos">0</span></h3>
 
     <div id="jogo">
-        <img src="fundo.png" id="fundo" alt="Cenário do jogo">
-        <img src="professor.png" id="professor" alt="Professor">
-
-        <h2 id="fim">Fim de jogo!</h2>
+        <div id="mundo">
+            <div id="cenarios">
+                <img src="fundo.png" class="fundo" id="fundo1">
+                <img src="fundocd.png" class="fundo" id="fundo2">
+            </div>
+            <img src="professor.png" id="professor">
+            <h2 id="fim">Fim de jogo!</h2>
+        </div>
     </div>
 
-    <button onclick="reiniciar()">Jogar novamente</button>
-
-    <p id="instrucao">Use ESPAÇO ou clique para voar!</p>
+    <button id="reiniciar">Jogar novamente</button>
+    <p id="instrucao">Use ESPAÇO ou toque na tela para voar!</p>
 
     <script src="java.js"></script>
 </body>

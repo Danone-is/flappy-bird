@@ -1,171 +1,216 @@
 
-let professor = document.getElementById("professor");
-let jogo = document.getElementById("jogo");
+// ELEMENTOS
+const professor = document.getElementById("professor");
+const mundo = document.getElementById("mundo");
+const jogo = document.getElementById("jogo");
+const pontosTela = document.getElementById("pontos");
+const fim = document.getElementById("fim");
 
+const imagens = ["fundo.png", "fundocd.png"];
+
+const fundos = [
+    { el: document.getElementById("fundo1"), x: 0, img: 0 },
+    { el: document.getElementById("fundo2"), x: 600, img: 1 }
+];
+
+// CONFIGURACOES
+const GRAVIDADE = 0.25;
+const IMPULSO = -6.5;
+const VELOCIDADE = 2.2;
+const LARGURA = 600;
+const ALTURA = 400;
+
+// VARIAVEIS
 let professorY = 150;
 let velocidade = 0;
-let gravidade = 0.25;
-let impulso = -6.5;
-
 let pontos = 0;
 let ativo = true;
 let livros = [];
+let tempo = 0;
+let animacao = null;
 
-const larguraProfessor = 50;
-const larguraLivro = 60;
-const distanciaEntreLivros = 180;
-const velocidadeLivros = 2.2;
-
-// Fazer o professor voar
-function voar() {
-    if (ativo) {
-        velocidade = impulso;
-    }
+// AJUSTAR TELA
+function ajustarTela() {
+    let escala = Math.min(jogo.clientWidth / 600, jogo.clientHeight / 400);
+    mundo.style.setProperty("--escala", escala);
 }
 
-// Apertar espaço
-document.addEventListener("keydown", function(evento) {
-    if (evento.code === "Space") {
-        evento.preventDefault();
-        voar();
+window.addEventListener("resize", ajustarTela);
+
+// MOVIMENTAR CENARIO
+function moverFundo(delta) {
+    fundos.forEach(f => f.x -= 0.7 * delta);
+
+    fundos.forEach(f => {
+        if (f.x <= -600) {
+            let outro = fundos.find(item => item !== f);
+
+            f.x = outro.x + 600;
+            f.img = (outro.img + 1) % imagens.length;
+            f.el.src = imagens[f.img];
+        }
+
+        f.el.style.left = f.x + "px";
+    });
+}
+
+// VOAR
+function voar() {
+    if (ativo) velocidade = IMPULSO;
+}
+
+// TECLADO
+document.addEventListener("keydown", function(e) {
+    if (e.code === "Space" && !e.repeat) {
+        e.preventDefault();
+        if (ativo) voar();
+        else reiniciar();
     }
 });
 
-// Clicar na tela
-jogo.addEventListener("click", voar);
+// CELULAR E MOUSE
+jogo.addEventListener("pointerdown", function() {
+    if (ativo) voar();
+    else reiniciar();
+});
 
-// Criar os livros
+// CRIAR LIVROS
 function criarLivro() {
-    if (!ativo) return;
-
     let altura = Math.floor(Math.random() * 120) + 50;
 
     let cima = document.createElement("div");
     cima.className = "livro";
     cima.style.height = altura + "px";
-    cima.style.top = "0px";
+    cima.style.top = "0";
 
     let baixo = document.createElement("div");
     baixo.className = "livro";
-    baixo.style.height = (400 - altura - distanciaEntreLivros) + "px";
-    baixo.style.bottom = "0px";
+    baixo.style.height = (400 - altura - 180) + "px";
+    baixo.style.bottom = "0";
 
-    jogo.appendChild(cima);
-    jogo.appendChild(baixo);
+    mundo.appendChild(cima);
+    mundo.appendChild(baixo);
 
-    livros.push({
-        cima: cima,
-        baixo: baixo,
-        x: 600,
-        altura: altura,
-        marcou: false
-    });
+    livros.push({ cima, baixo, x: 600, marcou: false });
 }
 
-// Criar livros a cada 2,5 segundos
-setInterval(function() {
-    criarLivro();
-}, 2500);
+// COLISAO
+function colidiu(livro) {
+    let p = professor.getBoundingClientRect();
+    let c = livro.cima.getBoundingClientRect();
+    let b = livro.baixo.getBoundingClientRect();
 
-// Finalizar o jogo
-function fimDeJogo() {
-    if (!ativo) return;
+    let margem = 8;
 
-    ativo = false;
-    document.getElementById("fim").style.display = "block";
-}
+    let esquerda = p.left + margem;
+    let direita = p.right - margem;
+    let topo = p.top + margem;
+    let base = p.bottom - margem;
 
-// Movimento do jogo
-function jogar() {
-
-    if (ativo) {
-
-        // Movimento do professor
-        velocidade += gravidade;
-        professorY += velocidade;
-
-        professor.style.top = professorY + "px";
-
-        // Movimentar os livros
-        livros.forEach(function(livro) {
-
-            livro.x -= velocidadeLivros;
-
-            livro.cima.style.left = livro.x + "px";
-            livro.baixo.style.left = livro.x + "px";
-
-            // Contar pontos
-            if (!livro.marcou && livro.x + larguraLivro < 100) {
-                pontos++;
-                livro.marcou = true;
-
-                document.getElementById("pontos").innerText = pontos;
-            }
-
-            // Verificar se o professor está na horizontal do livro
-            let professorDireita = 100 + larguraProfessor;
-            let livroDireita = livro.x + larguraLivro;
-
-            let naHorizontal =
-                professorDireita > livro.x &&
-                100 < livroDireita;
-
-            // Verificar se bateu nos livros
-            if (naHorizontal) {
-
-                let bateuEmCima = professorY < livro.altura;
-
-                let bateuEmBaixo =
-                    professorY + larguraProfessor >
-                    livro.altura + distanciaEntreLivros;
-
-                if (bateuEmCima || bateuEmBaixo) {
-                    fimDeJogo();
-                }
-            }
-        });
-
-        // Remover livros que saíram da tela
-        livros = livros.filter(function(livro) {
-
-            if (livro.x < -60) {
-                livro.cima.remove();
-                livro.baixo.remove();
-                return false;
-            }
-
-            return true;
-        });
-
-        // Verificar teto e chão
-        if (professorY < 0 || professorY + larguraProfessor > 400) {
-            fimDeJogo();
-        }
+    function bate(o) {
+        return direita > o.left &&
+               esquerda < o.right &&
+               base > o.top &&
+               topo < o.bottom;
     }
 
-    requestAnimationFrame(jogar);
+    return bate(c) || bate(b);
 }
 
-// Reiniciar
-function reiniciar() {
+// FIM DE JOGO
+function terminar() {
+    ativo = false;
+    fim.style.display = "block";
+}
 
-    livros.forEach(function(livro) {
+// JOGO
+function jogar(t) {
+    animacao = null;
+    if (!ativo) return;
+
+    if (tempo === 0) tempo = t;
+
+    let delta = Math.min((t - tempo) / 16.67, 2);
+    tempo = t;
+
+    moverFundo(delta);
+
+    velocidade += GRAVIDADE * delta;
+    professorY += velocidade * delta;
+    professor.style.top = professorY + "px";
+
+    if (livros.length === 0 ||
+        livros[livros.length - 1].x <= 300) {
+        criarLivro();
+    }
+
+    livros.forEach(livro => {
+        livro.x -= VELOCIDADE * delta;
+
+        livro.cima.style.left = livro.x + "px";
+        livro.baixo.style.left = livro.x + "px";
+
+        if (!livro.marcou &&
+            livro.x + 36 < 150) {
+            pontos++;
+            pontosTela.innerText = pontos;
+            livro.marcou = true;
+        }
+
+        if (colidiu(livro)) terminar();
+    });
+
+    livros = livros.filter(livro => {
+        if (livro.x + 36 < 0) {
+            livro.cima.remove();
+            livro.baixo.remove();
+            return false;
+        }
+        return true;
+    });
+
+    if (professorY < 0 || professorY + 50 > 400) {
+        terminar();
+    }
+
+    if (ativo) animacao = requestAnimationFrame(jogar);
+}
+
+// REINICIAR
+function reiniciar() {
+    if (animacao !== null) cancelAnimationFrame(animacao);
+
+    livros.forEach(livro => {
         livro.cima.remove();
         livro.baixo.remove();
     });
 
     livros = [];
-
-    professorY = 100;
+    professorY = 150;
     velocidade = 0;
     pontos = 0;
+    tempo = 0;
     ativo = true;
 
-    professor.style.top = "100px";
+    professor.style.top = "150px";
+    pontosTela.innerText = "0";
+    fim.style.display = "none";
 
-    document.getElementById("pontos").innerText = "0";
-    document.getElementById("fim").style.display = "none";
+    fundos[0].x = 0;
+    fundos[0].img = 0;
+    fundos[1].x = 600;
+    fundos[1].img = 1;
+
+    fundos.forEach(f => {
+        f.el.src = imagens[f.img];
+        f.el.style.left = f.x + "px";
+    });
+
+    animacao = requestAnimationFrame(jogar);
 }
 
-// Começar o jogo
-jogar();
+// INICIAR
+document.getElementById("reiniciar").addEventListener("click", reiniciar);
+
+ajustarTela();
+animacao = requestAnimationFrame(jogar);

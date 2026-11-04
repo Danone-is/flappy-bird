@@ -3,6 +3,8 @@ body {
     background: #183b56;
     text-align: center;
     font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 15px 5px;
 }
 
 h1, h3, #instrucao {
@@ -10,22 +12,40 @@ h1, h3, #instrucao {
 }
 
 #jogo {
-    width: 600px;
-    height: 400px;
-    background: skyblue;
+    width: min(750px, 94vw);
+    aspect-ratio: 3 / 2;
     margin: auto;
     position: relative;
     overflow: hidden;
     border: 3px solid white;
+    touch-action: none;
 }
 
-#fundo {
+#mundo {
+    width: 600px;
+    height: 400px;
     position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(var(--escala, 1));
+    transform-origin: center;
+}
+
+#cenarios {
+    position: absolute;
+    width: 600px;
+    height: 400px;
+    overflow: hidden;
     z-index: 0;
+}
+
+.fundo {
+    position: absolute;
+    width: 600px;
+    height: 400px;
+    top: 0;
+    object-fit: fill;
+    pointer-events: none;
 }
 
 #professor {
@@ -35,22 +55,25 @@ h1, h3, #instrucao {
     left: 150px;
     top: 150px;
     z-index: 2;
+    object-fit: contain;
+    pointer-events: none;
 }
 
 .livro {
     width: 36px;
     position: absolute;
     z-index: 1;
-    box-sizing: border-box;
     border: 3px solid #064d27;
+    box-sizing: border-box;
     background: repeating-linear-gradient(
         to bottom,
         #087c35 0px,
         #087c35 10px,
         #e4c76a 10px,
-        #075526 10px
+        #075526 20px
     );
 }
+
 #fim {
     display: none;
     color: red;
@@ -58,12 +81,18 @@ h1, h3, #instrucao {
     top: 140px;
     width: 100%;
     z-index: 3;
-    text-shadow: 1px 1px white;
 }
 
 button {
     margin: 15px;
-    padding: 10px 20px;
+    padding: 12px 25px;
+    font-size: 17px;
     cursor: pointer;
-    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+}
+
+@media (max-width: 600px) {
+    h1 { font-size: 25px; }
+    h3 { font-size: 19px; }
 }
